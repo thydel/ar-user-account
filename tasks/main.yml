@@ -1,0 +1,36 @@
+---
+
+- set_fact:
+    user: |
+      {{ user_accounts[id].login }}
+
+
+- name: create user
+
+  user:
+    name: '{{ user }}'
+    comment: '{{ user_accounts[id].name }}'
+    password: '{{ user_passwords[id].md5 }}'
+    update_password: on_create
+    shell: /bin/bash
+
+
+- name: user existp
+
+  register: getent
+  always_run: True
+  changed_when: False
+  failed_when: getent.rc == 1 or getent.rc == 3
+
+  command: getent passwd {{ user }}
+
+
+- name: add keys
+
+  no_log: True
+  with_items: user_keys[id]
+  when: getent.stdout_lines|count
+
+  authorized_key:
+    user: '{{ user }}'
+    key: '{{ item.key }}'
