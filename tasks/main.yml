@@ -36,11 +36,14 @@
     user: '{{ user }}'
     key: '{{ item.key }}'
 
+- set_fact: { user_removed_keys_tmp: [] }
+- set_fact: { user_removed_keys_tmp: '{{ user_removed_keys[id] }}' }
+  when: user_removed_keys[id] is defined
 
 - name: remove keys
 
   no_log: True
-  with_items: user_removed_keys[id]
+  with_items: user_removed_keys_tmp
   when: getent.stdout_lines|count
 
   authorized_key:
