@@ -4,6 +4,7 @@
     user: |
       {{ user_accounts[id].login }}
 
+- debug: { var: user }
 
 - name: create user
 
@@ -34,3 +35,15 @@
   authorized_key:
     user: '{{ user }}'
     key: '{{ item.key }}'
+
+
+- name: remove keys
+
+  no_log: True
+  with_items: user_removed_keys[id]
+  when: getent.stdout_lines|count
+
+  authorized_key:
+    user: '{{ user }}'
+    key: '{{ item.key }}'
+    state: absent
