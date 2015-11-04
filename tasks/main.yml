@@ -26,6 +26,39 @@
   command: getent passwd {{ user }}
 
 
+- name: user disablep
+
+  register: chage
+  always_run: True
+  changed_when: False
+  when: getent.stdout_lines|count and expire|default(False)
+
+  command: chage -l {{ user }}
+
+- set_fact:
+    expire_value: |
+      {{ chage.stdout_lines[3].split(':')[1] }}
+  when: not chage|skipped
+
+- debug: { var: expire_value }
+  when: not chage|skipped and debug|default(False)
+
+- set_fact:
+    expire_date: |
+      {{ lookup('pipe', 'date +%F -d' + chage.stdout_lines[3].split(':')[1] | quote) }}
+  when: not chage|skipped and not expire_value.find('never') != -1
+
+- debug: { var: expire_date }
+  when: not chage|skipped and debug|default(False)
+
+- name: disable user
+
+  when:    (not chage|skipped and not expire_value.find('never') != -1 and expire_date != expire|string)
+        or (not chage|skipped and     expire_value.find('never') != -1)
+
+  command: chage -E {{ expire }} {{ user }}
+
+
 - name: add keys
 
   no_log: True
