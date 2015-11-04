@@ -14,7 +14,7 @@
     password: '{{ user_passwords[id].md5 }}'
     update_password: on_create
     shell: /bin/bash
-
+    expires: '{{ expires_epoch | default(omit) }}'
 
 - name: user existp
 
