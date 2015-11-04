@@ -45,7 +45,7 @@
 
 - set_fact:
     expire_date: |
-      {{ lookup('pipe', 'date +%F -d' + chage.stdout_lines[3].split(':')[1] | quote) }}
+      {{ lookup('pipe', 'date +%F -d' + expire_value | quote) }}
   when: not chage|skipped and not expire_value.find('never') != -1
 
 - debug: { var: expire_date }
