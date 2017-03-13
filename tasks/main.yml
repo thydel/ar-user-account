@@ -1,7 +1,7 @@
 ---
 
 - set_fact:
-    user: |
+    user: |-
       {{ user_accounts[id].login }}
 
 - debug: { var: user }
@@ -19,7 +19,7 @@
 - name: user existp
 
   register: getent
-  always_run: True
+  check_mode: False
   changed_when: False
   failed_when: getent.rc == 1 or getent.rc == 3
 
@@ -29,7 +29,7 @@
 - name: user disablep
 
   register: chage
-  always_run: True
+  check_mode: False
   changed_when: False
   when: getent.stdout_lines|count and expire|default(False)
 
@@ -62,24 +62,26 @@
 - name: add keys
 
   no_log: True
-  with_items: user_keys[id]
+  with_items: '{{ user_accounts[id].ssh_keys }}'
+  loop_control: { loop_var: ssh_key }
   when: getent.stdout_lines|count
 
   authorized_key:
     user: '{{ user }}'
-    key: '{{ item.key }}'
+    key: '{{ ssh_key }}'
 
 - set_fact: { user_removed_keys_tmp: [] }
-- set_fact: { user_removed_keys_tmp: '{{ user_removed_keys[id] }}' }
-  when: user_removed_keys[id] is defined
+- set_fact: { user_removed_keys_tmp: '{{ user_accounts[id].removed_ssh_keys }}' }
+  when: user_accounts[id].removed_ssh_keys is defined
 
 - name: remove keys
 
   no_log: True
-  with_items: user_removed_keys_tmp
+  with_items: '{{ user_removed_keys_tmp }}'
+  loop_control: { loop_var: ssh_key }
   when: getent.stdout_lines|count
 
   authorized_key:
     user: '{{ user }}'
-    key: '{{ item.key }}'
+    key: '{{ ssh_key }}'
     state: absent
