@@ -12,7 +12,8 @@
     name: '{{ user }}'
     comment: '{{ user_accounts[id].name }}'
     password: '{{ user_passwords[id].md5 }}'
-    update_password: on_create
+    update_password: |-
+      {{ update_password | default('on_create') }}
     shell: /bin/bash
     expires: '{{ expires_epoch | default(omit) }}'
 
